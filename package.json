@@ -1,0 +1,36 @@
+{
+  "name": "elkmon",
+  "version": "0.1.0",
+  "description": "Module to interact with the Elk M1 Gold, using M1XEP ethernet interface",
+  "keywords": [
+    "elk",
+    "m1",
+    "elkm1",
+    "m1xep",
+    "security",
+    "automation"
+  ],
+  "author": "Shane Gentry",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "scripts": {
+    "pretest": "tsc",
+    "test": "mocha dist/test --recursive"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "net": "^1.0.2",
+    "tls": "0.0.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.5.3"
+  }
+}
