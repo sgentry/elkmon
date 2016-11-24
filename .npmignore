@@ -1,4 +1,5 @@
 src
+test
 typings
 typings.json
-test
+tsconfig.json
