@@ -65,8 +65,15 @@ class Elk extends EventEmitter {
 
     // error event handler
     this.connection.on('error', (err) => {
-      if (err.code == 'ECONNREFUSED') {
+      if (err.code === 'ECONNREFUSED') {
         this.emit('error', 'Connection to M1XEP failed!');
+      } else if (err.code === 'ECONNRESET') {
+        this.emit('error', err.code);
+        // connection was reset, attempt to reconnect
+        if (this.connection) {
+          this.connection.destroy();
+        }
+        this.connect();
       } else {
         this.emit('error', err.code);
       }
@@ -99,6 +106,8 @@ class Elk extends EventEmitter {
       return;
     }
 
+    try
+    {
     // Split on newline in case multiple messages are received at one time.
     let messages: Array<string> = data.trim().split('\n');
 
@@ -109,14 +118,13 @@ class Elk extends EventEmitter {
       // Parse message using Elk factory method
       let elkMessage = getElkMessage(message);
 
-      // if (elkMessage.type === 'SD') {
-      //   console.log('************elkmon - Received: ', elkMessage.message);
-      // }
-
       // Emit message
       this.emit('*', elkMessage);
       this.emit(elkMessage.type, elkMessage);
     });
+    } catch (e){
+      this.emit('error', e);
+    }
   }
 
   /**
