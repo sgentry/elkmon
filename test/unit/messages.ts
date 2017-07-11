@@ -287,11 +287,11 @@ describe('ZoneChangeUpdate', () => {
     it('zone id should be equal to 2', () => {
       expect(model.id).to.equal(2);
     });
-    it('zone physicalStatus should be equal to Normal', () => {
-      expect(model.physicalStatus).to.equal('Normal');
+    it('zone physicalStatus should be equal to EOL', () => {
+      expect(model.physicalStatus).to.equal('EOL');
     });
-    it('zone logicalState should be equal to EOL', () => {
-      expect(model.logicalState).to.equal('EOL');
+    it('zone logicalState should be equal to Normal', () => {
+      expect(model.logicalState).to.equal('Normal');
     });
   });
 });

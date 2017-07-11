@@ -487,8 +487,8 @@ export class ZoneChangeUpdate extends ElkMessage {
     this.id = +this.body.substring(0, 3);
     // Parse Hex value into physical & logical state/status
     let status = parseInt(this.body.substring(3, 4), 16);
-    this.physicalStatus = PhysicalStatus[status >> 2];
-    this.logicalState = LogicalState[status & 0x03];
+    this.physicalStatus = PhysicalStatus[status & 0x03];
+    this.logicalState = LogicalState[status >> 2];
   }
 }
 
@@ -509,8 +509,8 @@ export class ZoneStatusReport extends ElkMessage {
       var status = parseInt(this.body.substring(z - 1, z), 16);
       this.zones.push({
         id: z,
-        physicalStatus: PhysicalStatus[status >> 2],
-        logicalState: LogicalState[status & 0x03]
+        physicalStatus: PhysicalStatus[status & 0x03],
+        logicalState: LogicalState[status >> 2]
       });
     }
   }

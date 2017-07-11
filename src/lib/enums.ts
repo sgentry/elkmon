@@ -12,14 +12,14 @@ export enum ArmMode {
   ForceArmToStayMode
 }
 
-export enum LogicalState {
+export enum PhysicalStatus {
   Unconfigured = 0,
   Open,
   EOL,
   Short
 }
 
-export enum PhysicalStatus {
+export enum LogicalState {
   Normal = 0,
   Trouble,
   Violated,

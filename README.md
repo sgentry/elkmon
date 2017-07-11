@@ -31,8 +31,8 @@ I don't have a thermostat integrated with my home system so I haven't implemente
     checkSum: '34',
     zones:
       [
-        { id: 1, physicalStatus: 'Normal', logicalState: 'Short' },
-        { id: 2, physicalStatus: 'Normal', logicalState: 'Short' },
+        { id: 1, physicalStatus: 'Short', logicalState: 'Normal' },
+        { id: 2, physicalStatus: 'Short', logicalState: 'Normal' },
         ...
       ]
   }
