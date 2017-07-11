@@ -410,8 +410,9 @@ class Elk extends EventEmitter {
    * @param {number} id
    * @param {TextDescriptionType} type
    * @param {any} cb
+   * @param {number} [timeout=15000]
    */
-  getDescription(id: number, type: TextDescriptionType, cb) {
+  getDescription(id: number, type: TextDescriptionType, cb, timeout = 15000) {
     //Listen for response
     this.once('SD', (response) => {
       cb(response);
@@ -424,7 +425,7 @@ class Elk extends EventEmitter {
     //Setup timeout
     setTimeout(function () {
       cb({ error: 'Timout occured before Text Description (sd) was received.'});
-    }, 2000);
+    }, timeout);
   }
 
   
@@ -437,9 +438,10 @@ class Elk extends EventEmitter {
    * for unconfigured items. Useful for Tasks, Outputs, etc that don't have an Api call for retreving
    * configuration/definition.
    * @param {string} type
+   * @param {number} [timeout=15000]
    * @returns {TextStringDescriptionReport}
    */
-  requestTextDescriptionAll(type: TextDescriptionType): Promise<TextStringDescriptionReport[]> {
+  requestTextDescriptionAll(type: TextDescriptionType, timeout = 15000): Promise<TextStringDescriptionReport[]> {
     // Text Description items received from panel
     const items = [];
 
@@ -462,7 +464,7 @@ class Elk extends EventEmitter {
           // Return items to caller
           resolve(items);
         }
-      });
+      }, timeout);
     }
 
     // Promise is resolved when all items have been received.
