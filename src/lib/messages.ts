@@ -27,7 +27,7 @@ export class ElkMessage {
   private checkSum: string;
 
   /**
-   * Creates an instance of ElkMessage. If you want to 
+   * Creates an instance of ElkMessage.
    * 
    * @param {string} command - Instantiate message from a new command, i.e. command = 'zs'.
    * @param {string} response - Instantiate message from an Elk response, i.e. response = '0AZC002200CE'.
@@ -99,6 +99,7 @@ export class ElkMessage {
     if (hex.length === 1) {
       hex = `0${hex}`;
     }
+
     return hex;
   }
 }
@@ -340,10 +341,10 @@ export class TemperatureReply extends ElkMessage {
  * Represents a Thermostat Data Reply (TR).
  * 
  * @export
- * @class TermostatReply
+ * @class ThermostatReply
  * @extends {ElkMessage}
  */
-export class TermostatReply extends ElkMessage {
+export class ThermostatReply extends ElkMessage {
   id: string;
   mode: string;
   hold: boolean;

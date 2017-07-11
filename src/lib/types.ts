@@ -14,7 +14,7 @@ export const responseTypes = new Map(
     ['LD', 'LogDataUpdate'],
     ['LW', 'TemperatureReply'],
     ['TC', 'TaskChangeUpdate'],
-    ['TR', 'TermostatReply'],
+    ['TR', 'ThermostatReply'],
     ['SD', 'TextStringDescriptionReport'],
     ['ZC', 'ZoneChangeUpdate'],
     ['ZD', 'ZoneDefinitionReport'],

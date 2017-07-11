@@ -6,7 +6,7 @@ import {
   OutputChangeUpdate,
   OutputStatusReport,
   TemperatureReply,
-  TermostatReply,
+  ThermostatReply,
   TextStringDescriptionReport,
   ZoneBypass,
   ZoneDefinitionReport,
@@ -116,7 +116,7 @@ describe('OutputChangeUpdate', () => {
 
   describe('parse', () => {
     it('Output number should be equal to 3', () => {
-      expect(model.outputNumber).to.equal(3);
+      expect(model.id).to.equal(3);
     });
     it('Output state should be equal to \'On\'', () => {
       expect(model.state).to.equal('On');
@@ -167,11 +167,11 @@ describe('TemperatureReply', () => {
   });
 });
 
-describe('TermostatReply', () => {
-  var model: TermostatReply;
+describe('ThermostatReply', () => {
+  var model: ThermostatReply;
 
   before(function() {
-    model = new TermostatReply('13TR01200726875000000');
+    model = new ThermostatReply('13TR01200726875000000');
   });
 
   describe('parse', () => {
