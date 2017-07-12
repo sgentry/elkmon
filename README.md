@@ -5,13 +5,15 @@
 Not all features have been implemented. This is something I have been experimenting with in my free time. 
 I don't have a thermostat integrated with my home system so I haven't implemented those commands yet. However, a Thermostat Reply Message (TR) will be parsed.
 
+#### Note: For users upgrading to version 1.0.0 from an earlier version, please be aware that there was a bug where the Physical and Logical status, for a zone, was incorrectly swapped. This has been fixed in version 1.0.0.
+
 ## Features
 
 * Supports both secure and non-secure communication with [Elk M1XEP](http://www.elkproducts.com/product-catalog/elk-m1xep-m1-ethernet-interface)
 * All received messages are parsed into an ElkMessage
 
   Example
-  ```
+  ``` javascript
     {
       message: '1EAS000000001111111100000000000E', // Full message
       body: '00000000111111110000000000', // Parsed message
@@ -22,7 +24,7 @@ I don't have a thermostat integrated with my home system so I haven't implemente
   ```
 * Some messages are parsed into a specific message type. For example, ZoneStatusReport (ZS) which includes an array of zones:
 
-  ```
+  ``` javascript
   {
     message: 'D6ZS33333333333333303333000000000000333300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000034',
     body: '333333333333333033330000000000003333000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
