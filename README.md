@@ -146,6 +146,9 @@ var elk = new Elk(
 ## requestZonePartitionReport([timeout])
   Requests a Zone Partition Report.
 
+## requestZoneVoltageReport(id, [timeout])
+  Requests a Zone Voltage Report.
+
 ## requestZoneStatusReport([timeout])
   Requests a Zone Status Report.
 

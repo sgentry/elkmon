@@ -374,6 +374,32 @@ class Elk extends EventEmitter {
     });
   }
 
+  /**
+   * Request zone voltage report
+   * 
+   * @param {number} id
+   * @param {number} [timeout=5000]
+   * @returns {Promise<TextStringDescriptionReport>}
+   * 
+   * @memberOf Elk
+   */
+  requestZoneVoltageReport(id: number, timeout = 5000) {
+    return new Promise((resolve, reject) => {
+      //Listen for response
+      this.once('ZV', (response) => {
+        resolve(response);
+      });
+
+      //Send the command
+      let elk = new ElkMessage(`zv${leftPad(id.toString(), 3, 0)}`, null);
+      this.connection.write(`${elk.message}\r\n`);
+
+      //Setup timeout
+      setTimeout(function () {
+        reject('Timout occured before Zone Voltage Report (zv) was received.');
+      }, timeout);
+    });
+  }
   
   /**
    * Request text description
@@ -473,7 +499,47 @@ class Elk extends EventEmitter {
     });
   }
 
+  /**
+   * Set thermostat data.
+   * 
+   * @param {number} thermostatId - The thermostat number to program (1-16).
+   * @param {number} value - The value to set (00-99).
+   * @param {number} element - The element to set.
+   */
+  setThermostat(thermostatId: number, value: number, element: number) {
+    const message = 'The value parameter is outside accepted range.';
+    // Do some validation
+    if (element < 0 || element > 5)
+      throw new Error(message.replace('value', 'element'));
+
+    switch(element) {
+      case 0:
+        if (value < 0 || value > 4)
+          throw new Error(message);
+        break;
+      case 1:
+        if (value < 0 || value > 1)
+          throw new Error(message);
+        break;
+      case 2:
+        if (value < 0 || value > 1)
+          throw new Error(message);
+        break;
+      case 4:
+        if (value < 1 || value > 99)
+          throw new Error(message);
+        break;
+      case 5:
+        if (value < 1 || value > 99)
+          throw new Error(message);
+        break;
+      default:
+    }
   
+    let elk = new ElkMessage(`ts${leftPad(thermostatId.toString(), 2, '0')}${leftPad(value.toString(), 2, '0')}${element.toString()}`, null);
+    this.connection.write(`${elk.message}\r\n`);
+  }
+
   /**
    * Disconnects from the Elk M1XEP.
    */
