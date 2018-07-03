@@ -1,6 +1,6 @@
 {
   "name": "elkmon",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Module to interact with the Elk M1 Gold, using M1XEP ethernet interface",
   "keywords": [
     "elk",
@@ -22,6 +22,7 @@
     "url": "https://github.com/sgentry/elkmon.git"
   },
   "scripts": {
+    "prepublish": "tsc",
     "pretest": "tsc",
     "test": "mocha dist/test --recursive"
   },
