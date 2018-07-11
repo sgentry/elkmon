@@ -1,6 +1,7 @@
 /// <reference path="../../typings/globals/mocha/index.d.ts" />
 import {
   ArmingStatusReport,
+  KeypadKeyChangeUpdate,
   EntryExitTime,
   LogDataUpdate,
   OutputChangeUpdate,
@@ -40,6 +41,44 @@ describe('ArmingStatusReport', () => {
   });
 });
 
+describe('KeypadKeyChangeUpdate', () => {
+  var model: KeypadKeyChangeUpdate;
+
+  before(function() {
+    model = new KeypadKeyChangeUpdate('19KC01112010000200000000010');
+  });
+
+  describe('parse', () => {
+    it('Keypad id should be equal to 1', () => {
+      expect(model.keypadId).to.equal(1);
+    });
+    it('Key should be equal to Asterisk', () => {
+      expect(model.key).to.equal('Asterisk');
+    });
+    it('F1 illumination should be equal to Blinking', () => {
+      expect(model.F1).to.equal('Blinking');
+    });
+    it('F2 illumination should be equal to Off', () => {
+      expect(model.F2).to.equal('Off');
+    });
+    it('F3 illumination should be equal to On', () => {
+      expect(model.F3).to.equal('On');
+    });
+    it('F4 illumination should be equal to Off', () => {
+      expect(model.F4).to.equal('Off');
+    });
+    it('F5 illumination should be equal to Off', () => {
+      expect(model.F5).to.equal('Off');
+    });
+    it('F6 illumination should be equal to Off', () => {
+      expect(model.F6).to.equal('Off');
+    });
+    it('Bypass code required should be equal to false', () => {
+      expect(model.BypassCodeRequired).to.equal(false);
+    });
+  });
+});
+
 describe('EntryExitTime', () => {
   var model: EntryExitTime;
 
@@ -51,8 +90,8 @@ describe('EntryExitTime', () => {
     it('Area id should be equal to 1', () => {
       expect(model.areaId).to.equal(1);
     });
-    it('Timer type should be equal to 0', () => {
-      expect(model.timerType).to.equal(0);
+    it('Timer type should be equal to Exit', () => {
+      expect(model.timerType).to.equal('Exit');
     });
     it('Timer 1 should be equal to 60', () => {
       expect(model.timer1).to.equal(60);
