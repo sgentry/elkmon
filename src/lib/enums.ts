@@ -64,6 +64,39 @@ export enum ChimeMode {
   ChimeAndVoice
 }
 
+export enum TimerType {
+  Exit = 0,
+  Entry
+}
+
+export enum Key {
+  NoKey = 0,
+  Asterisk = 11,
+  Pound = 12,
+  F1 = 13,
+  F2 = 14,
+  F3 = 15,
+  F4 = 16,
+  Stay = 17,
+  Exit = 18,
+  Chime = 19,
+  Bypass = 20,
+  Elk = 21,
+  Down = 22,
+  Up = 23,
+  Right = 24,
+  Left = 25,
+  F6 = 26,
+  F5 = 27,
+  DataKeyMode = 28 // Data was entered, this acts as a carriage return
+}
+
+export enum IlluminationStatus {
+  Off = 0,
+  On,
+  Blinking
+}
+
 export enum WeekDay {
   Sunday = 1,
   Monday,

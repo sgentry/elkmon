@@ -5,7 +5,10 @@ import {
   WeekDay,
   Month,
   ThermostatMode,
-  ChimeMode
+  ChimeMode,
+  TimerType,
+  Key,
+  IlluminationStatus
 } from './enums';
 import { armStatus, armUpState, alarmState, zoneDefinition, EventType } from './types';
 import { AreaReport, ZoneDefinition } from './models';
@@ -141,7 +144,7 @@ export class ArmingStatusReport extends ElkMessage {
  */
 export class EntryExitTime extends ElkMessage {
   areaId: number;
-  timerType: number;
+  timerType: TimerType;
   timer1: number;
   timer2: number;
   armedState: string;
@@ -150,27 +153,12 @@ export class EntryExitTime extends ElkMessage {
     super(null, response);
 
     this.areaId = +this.body.substring(0, 1);
-    this.timerType = +this.body.substring(1, 2);
+    this.timerType = TimerType[this.body.substring(1, 2)];
     this.timer1 = +this.body.substring(2, 5);
     this.timer2 = +this.body.substring(5, 8);
     this.armedState = armStatus.get(this.body.substring(8, 9));
   }
 }
-
-// export class KeypadFunctionKeypress extends ElkMessage {
-//   keypadId: number;
-//   functionKey: number;
-//   areaChimeMode: string[] = [];
-
-//   constructor(response: string) {
-//     super(null, response);
-
-//     this.keypadId = +this.body.substring(0, 2);
-//     this.functionKey = + this.body.substring(2, 3);
-
-//   }
-// }
-
 
 /**
  * Keypad Areas Report (KA).
@@ -202,6 +190,51 @@ export class KeypadAreasReport extends ElkMessage {
         this.areas.push(area);
       }
     }
+  }
+}
+
+/**
+ * Keypad Key Change Update (KC).
+ * 
+ * @export
+ * @class KeypadKeyChangeUpdate
+ * @extends {ElkMessage}
+ */
+export class KeypadKeyChangeUpdate extends ElkMessage {
+  
+  /**
+   * 
+   * 
+   * @type {number}
+   */
+  keypadId: number;
+  key: Key;
+  F1: IlluminationStatus;
+  F2: IlluminationStatus;
+  F3: IlluminationStatus;
+  F4: IlluminationStatus;
+  F5: IlluminationStatus;
+  F6: IlluminationStatus;
+  BypassCodeRequired: boolean;
+
+  constructor(response: string) {
+    super(null, response);
+
+    this.keypadId = +this.body.substring(0, 2);
+    this.key = Key[this.body.substring(2, 4)];
+    this.F1 = IlluminationStatus[this.body.substring(4, 5)];
+    this.F2 = IlluminationStatus[this.body.substring(5, 6)];
+    this.F3 = IlluminationStatus[this.body.substring(6, 7)];
+    this.F4 = IlluminationStatus[this.body.substring(7, 8)];
+    this.F5 = IlluminationStatus[this.body.substring(8, 9)];
+    this.F6 = IlluminationStatus[this.body.substring(9, 10)];
+    this.BypassCodeRequired = +this.body.substring(10, 11) === 1 ? true : false;
+
+    // TODO: Figure out chime mode one of these days
+    // const chimeData = parseInt(this.body.substring(11, 18), 16);
+
+    // this.physicalStatus = PhysicalStatus[status & 0x03];
+    // this.logicalState = LogicalState[status >> 2];
   }
 }
 
