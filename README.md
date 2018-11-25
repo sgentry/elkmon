@@ -2,10 +2,7 @@
 
 **elkmon** is a module for interfacing with the [Elk M1](http://www.elkproducts.com/product-catalog/m1-gold-cross-platform-control) security and automation control system.
 
-Not all features have been implemented. This is something I have been experimenting with in my free time. 
-I don't have a thermostat integrated with my home system so I haven't implemented those commands yet. However, a Thermostat Reply Message (TR) will be parsed.
-
-#### Note: For users upgrading to version 1.0.0 from an earlier version, please be aware that there was a bug where the Physical and Logical status, for a zone, was incorrectly swapped. This has been fixed in version 1.0.0.
+## Note: Does not implement complete Api.
 
 ## Features
 
