@@ -169,7 +169,7 @@ class Elk extends EventEmitter {
    * @param {number} seconds - Number of seconds output will be active
    */
   setOutputOn(outputId: number, seconds: number) {
-    let elk = new ElkMessage(`cn${leftPad(outputId.toString(), 3, '0')}${seconds.toString()}`, null);
+    let elk = new ElkMessage(`cn${leftPad(outputId.toString(), 3, '0')}${leftPad(seconds.toString(), 5, '0')}`, null);
     this.connection.write(`${elk.message}\r\n`);
   }
 
@@ -207,31 +207,6 @@ class Elk extends EventEmitter {
   toggleOutput(outputId: number) {
     let elk = new ElkMessage(`ct${leftPad(outputId.toString(), 3, '0')}`, null);
     this.connection.write(`${elk.message}\r\n`);
-  }
-
-  
-  /**
-   * Request the Control Output Status report from Elk panel.
-   * 
-   * @param {number} [timeout=5000]
-   * @returns
-   */
-  requestOutputStatusReport(timeout = 5000): Promise<OutputStatusReport> {
-    return new Promise((resolve, reject) => {
-      //Listen for response
-      this.once('CS', (response) => {
-        resolve(response);
-      });
-
-      //Send the command
-      let elk = new ElkMessage('cs', null);
-      this.connection.write(`${elk.message}\r\n`);
-
-      //Setup timeout
-      setTimeout(function () {
-        reject('Timout occured before Control Output Status (cs) was received.');
-      }, timeout);
-    });
   }
   
   /**
@@ -273,7 +248,6 @@ class Elk extends EventEmitter {
     });
   }
 
-  
   /**
    * Request Keypad Area assignments.
    * 
@@ -299,7 +273,155 @@ class Elk extends EventEmitter {
       }, timeout);
     });
   }
+    
+  /**
+   * Request the Control Output Status report from Elk panel.
+   * 
+   * @param {number} [timeout=5000]
+   * @returns
+   */
+  requestOutputStatusReport(timeout = 5000): Promise<OutputStatusReport> {
+    return new Promise((resolve, reject) => {
+      //Listen for response
+      this.once('CS', (response) => {
+        resolve(response);
+      });
 
+      //Send the command
+      let elk = new ElkMessage('cs', null);
+      this.connection.write(`${elk.message}\r\n`);
+
+      //Setup timeout
+      setTimeout(function () {
+        reject('Timout occured before Control Output Status (cs) was received.');
+      }, timeout);
+    });
+  }
+
+  /**
+   * Request system trouble status (SS).
+   * 
+   * @param {number} [timeout=5000]
+   * @returns {Promise<number[]>}
+   * 
+   * @memberOf Elk
+   */
+  requestSystemStatus(timeout = 5000): Promise<number[]> {
+    return new Promise((resolve, reject) => {
+      //Listen for response
+      this.once('SS', (response) => {
+        resolve(response);
+      });
+
+      //Send the command
+      let elk = new ElkMessage('ss', null);
+      this.connection.write(`${elk.message}\r\n`);
+
+      //Setup timeout
+      setTimeout(function () {
+        reject('Timout occured before system status request (ss) was received.');
+      }, timeout);
+    });
+  }
+
+  /**
+   * Request text description
+   * 
+   * @param {number} id
+   * @param {TextDescriptionType} type
+   * @param {number} [timeout=5000]
+   * @returns {Promise<TextStringDescriptionReport>}
+   * 
+   * @memberOf Elk
+   */
+  requestTextDescription(id: number, type: TextDescriptionType, timeout = 5000): Promise<TextStringDescriptionReport> {
+    return new Promise((resolve, reject) => {
+      //Listen for response
+      this.once('SD', (response) => {
+        resolve(response);
+      });
+
+      //Send the command
+      let elk = new ElkMessage(`sd${leftPad(type.toString(), 2, 0)}${leftPad(id.toString(), 3, 0)}`, null);
+      this.connection.write(`${elk.message}\r\n`);
+
+      //Setup timeout
+      setTimeout(function () {
+        reject('Timout occured before Text Description (sd) was received.');
+      }, timeout);
+    });
+  }
+
+  
+  /**
+   * For internal use by requestTextDescriptionAll. Asynchronous call to retreived
+   * a Text Description.
+   * @param {number} id
+   * @param {TextDescriptionType} type
+   * @param {any} cb
+   * @param {number} [timeout=15000]
+   */
+  getDescription(id: number, type: TextDescriptionType, cb, timeout = 15000) {
+    //Listen for response
+    this.once('SD', (response) => {
+      cb(response);
+    });
+
+    //Send the command
+    let elk = new ElkMessage(`sd${leftPad(type.toString(), 2, 0)}${leftPad(id.toString(), 3, 0)}`, null);
+    this.connection.write(`${elk.message}\r\n`);
+
+    //Setup timeout
+    setTimeout(function () {
+      cb({ error: 'Timout occured before Text Description (sd) was received.'});
+    }, timeout);
+  }
+
+  
+  /**
+   * Method returns the configured Text Descriptions, by type. We start at id=1.
+   * If the requested id is not configured, Elk will return the next configured item (to speed up requests)
+   * or 000 if no more valid names are found. Consult RS232 protocol guide for more info on SD messages.
+   * So we'll recursively query the panel until we reach the max length, by type, or receive 000.
+   * NOTE: This can be used to determine what has been configured on panel since a description is not returned
+   * for unconfigured items. Useful for Tasks, Outputs, etc that don't have an Api call for retreving
+   * configuration/definition.
+   * @param {string} type
+   * @param {number} [timeout=15000]
+   * @returns {TextStringDescriptionReport}
+   */
+  requestTextDescriptionAll(type: TextDescriptionType, timeout = 15000): Promise<TextStringDescriptionReport[]> {
+    // Text Description items received from panel
+    const items = [];
+
+    const recursiveCall = (id, resolve, reject) => {
+      this.getDescription(id, type, (data) => {
+        if(data.error) {
+          reject(data.error);
+        }
+
+        // If the returned id == 0, then no more configured items.
+        if(data.id > 0 && id < textDescriptionMaxRange[TextDescriptionType[type]]) {
+          //panel returned a text description
+          items.push(data);
+          // Since panel returns the 'next' configured item, we need set the id to 
+          // the last retreived one.
+          id = data.id;
+          id++; // Increment to next item
+          recursiveCall(id, resolve, reject);
+        } else {
+          // Return items to caller
+          resolve(items);
+        }
+      }, timeout);
+    }
+
+    // Promise is resolved when all items have been received.
+    return new Promise((resolve, reject) => {
+      recursiveCall(1, resolve, reject);
+    });
+  }
+  
   /**
    * Requests a Zone Definition Report from the Elk panel.
    * 
@@ -398,104 +520,6 @@ class Elk extends EventEmitter {
       setTimeout(function () {
         reject('Timout occured before Zone Voltage Report (zv) was received.');
       }, timeout);
-    });
-  }
-  
-  /**
-   * Request text description
-   * 
-   * @param {number} id
-   * @param {TextDescriptionType} type
-   * @param {number} [timeout=5000]
-   * @returns {Promise<TextStringDescriptionReport>}
-   * 
-   * @memberOf Elk
-   */
-  requestTextDescription(id: number, type: TextDescriptionType, timeout = 5000): Promise<TextStringDescriptionReport> {
-    return new Promise((resolve, reject) => {
-      //Listen for response
-      this.once('SD', (response) => {
-        resolve(response);
-      });
-
-      //Send the command
-      let elk = new ElkMessage(`sd${leftPad(type.toString(), 2, 0)}${leftPad(id.toString(), 3, 0)}`, null);
-      this.connection.write(`${elk.message}\r\n`);
-
-      //Setup timeout
-      setTimeout(function () {
-        reject('Timout occured before Text Description (sd) was received.');
-      }, timeout);
-    });
-  }
-
-  
-  /**
-   * For internal use by requestTextDescriptionAll. Asynchronous call to retreived
-   * a Text Description.
-   * @param {number} id
-   * @param {TextDescriptionType} type
-   * @param {any} cb
-   * @param {number} [timeout=15000]
-   */
-  getDescription(id: number, type: TextDescriptionType, cb, timeout = 15000) {
-    //Listen for response
-    this.once('SD', (response) => {
-      cb(response);
-    });
-
-    //Send the command
-    let elk = new ElkMessage(`sd${leftPad(type.toString(), 2, 0)}${leftPad(id.toString(), 3, 0)}`, null);
-    this.connection.write(`${elk.message}\r\n`);
-
-    //Setup timeout
-    setTimeout(function () {
-      cb({ error: 'Timout occured before Text Description (sd) was received.'});
-    }, timeout);
-  }
-
-  
-  /**
-   * Method returns the configured Text Descriptions, by type. We start at id=1.
-   * If the requested id is not configured, Elk will return the next configured item (to speed up requests)
-   * or 000 if no more valid names are found. Consult RS232 protocol guide for more info on SD messages.
-   * So we'll recursively query the panel until we reach the max length, by type, or receive 000.
-   * NOTE: This can be used to determine what has been configured on panel since a description is not returned
-   * for unconfigured items. Useful for Tasks, Outputs, etc that don't have an Api call for retreving
-   * configuration/definition.
-   * @param {string} type
-   * @param {number} [timeout=15000]
-   * @returns {TextStringDescriptionReport}
-   */
-  requestTextDescriptionAll(type: TextDescriptionType, timeout = 15000): Promise<TextStringDescriptionReport[]> {
-    // Text Description items received from panel
-    const items = [];
-
-    const recursiveCall = (id, resolve, reject) => {
-      this.getDescription(id, type, (data) => {
-        if(data.error) {
-          reject(data.error);
-        }
-
-        // If the returned id == 0, then no more configured items.
-        if(data.id > 0 && id < textDescriptionMaxRange[TextDescriptionType[type]]) {
-          //panel returned a text description
-          items.push(data);
-          // Since panel returns the 'next' configured item, we need set the id to 
-          // the last retreived one.
-          id = data.id;
-          id++; // Increment to next item
-          recursiveCall(id, resolve, reject);
-        } else {
-          // Return items to caller
-          resolve(items);
-        }
-      }, timeout);
-    }
-
-    // Promise is resolved when all items have been received.
-    return new Promise((resolve, reject) => {
-      recursiveCall(1, resolve, reject);
     });
   }
 
