@@ -14,7 +14,8 @@ import {
   ZoneStatusReport,
   ZoneBypass,
   ZoneChangeUpdate,
-  ZoneVoltageReport
+  ZoneVoltageReport,
+  KeypadAreasReport
 } from './lib/messages';
 import { ArmMode, TextDescriptionType, Words } from './lib/enums';
 import { textDescriptionMaxRange } from './lib/types';
@@ -161,7 +162,7 @@ class Elk extends EventEmitter {
     let elk = new ElkMessage(`tn${leftPad(taskId.toString(), 3, '0')}`, null);
     this.connection.write(`${elk.message}\r\n`);
   }
-  
+
   /**
    * Turn output on.
    * 
@@ -252,11 +253,11 @@ class Elk extends EventEmitter {
    * Request Keypad Area assignments.
    * 
    * @param {number} [timeout=5000]
-   * @returns {Promise<number[]>}
+   * @returns {Promise<KeypadAreasReport>}
    * 
    * @memberOf Elk
    */
-  requestAreas(timeout = 5000): Promise<number[]> {
+  requestAreas(timeout = 5000): Promise<KeypadAreasReport> {
     return new Promise((resolve, reject) => {
       //Listen for response
       this.once('KA', (response) => {
@@ -302,11 +303,11 @@ class Elk extends EventEmitter {
    * Request system trouble status (SS).
    * 
    * @param {number} [timeout=5000]
-   * @returns {Promise<number[]>}
+   * @returns {Promise<ElkMessage>}
    * 
    * @memberOf Elk
    */
-  requestSystemStatus(timeout = 5000): Promise<number[]> {
+  requestSystemStatus(timeout = 5000): Promise<ElkMessage> {
     return new Promise((resolve, reject) => {
       //Listen for response
       this.once('SS', (response) => {
@@ -505,7 +506,7 @@ class Elk extends EventEmitter {
    * 
    * @memberOf Elk
    */
-  requestZoneVoltageReport(id: number, timeout = 5000) {
+  requestZoneVoltageReport(id: number, timeout = 5000): Promise<ZoneVoltageReport> {
     return new Promise((resolve, reject) => {
       //Listen for response
       this.once('ZV', (response) => {
