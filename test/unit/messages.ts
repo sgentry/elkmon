@@ -222,6 +222,26 @@ describe('TextStringDescriptionReport', () => {
   });
 });
 
+describe('TextStringDescriptionReport > 99', () => {
+  var model: TextStringDescriptionReport;
+
+  before(function() {
+    model = new TextStringDescriptionReport('1BSD01101Front DoorKeypad0089');
+  });
+
+  describe('parse', () => {
+    it('type should be equal to Area', () => {
+      expect(model.descriptionType).to.equal('Area');
+    });
+    it('Area id should be equal to 101', () => {
+      expect(model.id).to.equal(101);
+    });
+    it('Description should be equal to Front DoorKeypad', () => {
+      expect(model.description).to.equal('Front DoorKeypad');
+    });
+  });
+});
+
 describe('ZoneBypassReply', () => {
   var model: ZoneBypass;
 
