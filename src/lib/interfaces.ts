@@ -6,10 +6,3 @@ export interface ConnectOptions {
   rejectUnauthorized?: boolean;
   secureProtocol?: string;
 }
-
-// export interface CommandOptions {
-//   keypadCode: string,
-//   areaId: number,
-//   zoneId?: number
-// }
-
