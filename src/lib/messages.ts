@@ -169,22 +169,30 @@ export class EntryExitTime extends ElkMessage {
  */
 export class KeypadAreasReport extends ElkMessage {
   
-  /**
+  /** 
    * Distinct areas that are assigned to keypads.
    * 
    * @type {number[]}
    */
   areas: number[] = [];
+  /** 
+   * Keypad area assignments. Map<key=Keypad Id, value=Area Id>
+   * 
+   * @type {Map<number, number>}
+   */
+  keypadAreaAssignment: Map<number, number> = new Map()
 
   constructor(response: string) {
     super(null, response);
 
     for (let i = 0; i < 16; i++) {
-      let area = parseInt(this.body.substring(i, i + 1));
+      let area = parseInt(this.body.substring(i, i + 1), 10);
 
       if (area === 0) {
         continue;
       }
+
+      this.keypadAreaAssignment.set(i + 1, area);
 
       if (this.areas.indexOf(area) === -1) {
         this.areas.push(area);
@@ -419,7 +427,7 @@ export class TextStringDescriptionReport extends ElkMessage {
     super(null, response);
 
     this.descriptionType = TextDescriptionType[parseInt(this.body.substring(0, 2))];
-    this.id = parseInt(this.body.substring(3, 5));
+    this.id = parseInt(this.body.substring(2, 5), 10);
     this.description = this.body.substring(5, this.body.length - 2).trim();
   }
 }
