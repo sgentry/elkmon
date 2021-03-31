@@ -25,7 +25,7 @@ import { leftPad } from './lib/utils';
 class Elk extends EventEmitter {
 
   private isAuthorized: boolean = false;
-  private connection: any = null;
+  private connection: any = undefined;
 
   constructor(
     public port: number = 2101,
@@ -40,57 +40,75 @@ class Elk extends EventEmitter {
     super();
   }
 
-  connect() {
-    if (this.options.secure) {
-      this.connection = tslConnect(
-        this.port,
-        this.host,
-        {
-          rejectUnauthorized: this.options.rejectUnauthorized,
-          secureProtocol: this.options.secureProtocol
-        },
-        () => this.onConnect());
-    }
-    else {
-      this.connection = netConnect({
-        host: this.host,
-        port: this.port
-      },
-        () => this.onConnect());
-    }
+  async connect(): Promise<void> {
+    let errorListener: (error: Error) => void;
 
-    this.connection.setEncoding('ascii');
+    return new Promise((resolve, reject) => {
+      errorListener = error => reject(error);
 
-    // Listen for incoming data 
-    this.connection.on('data', (data) => this.onDataReceived(data));
-
-    // error event handler
-    this.connection.on('error', (err) => {
-      if (err.code === 'ECONNREFUSED') {
-        this.emit('error', 'Connection to M1XEP failed!');
-      } else if (err.code === 'ECONNRESET') {
-        this.emit('error', err.code);
-        // connection was reset, attempt to reconnect
-        if (this.connection) {
-          this.connection.destroy();
-        }
-        this.connect();
-      } else {
-        this.emit('error', err.code);
+      if (this.options.secure) {
+        this.connection = tslConnect(
+          this.port,
+          this.host,
+          {
+            rejectUnauthorized: this.options.rejectUnauthorized,
+            secureProtocol: this.options.secureProtocol
+          },
+          () => {
+            this.onConnect();
+            resolve();
+          });
       }
-    });
+      else {
+        this.connection = netConnect({
+          host: this.host,
+          port: this.port
+        },
+          () => {
+            this.onConnect();
+            resolve();
+          });
+      }
 
-    // close event handler
-    this.connection.on('close', () => {
-      this.emit('end', 'The connection to the Elk M1 has been lost');
-    });
+      this.connection.on('error', errorListener);
+      this.connection.setEncoding('ascii');
+      this.addListeners();
+    })
+      .catch(() => {
+        // catch connection errors to remove error listener, then return rejected promise
+        this.connection.removeListener('error', errorListener);
+        this.connection.destroy();
+        return Promise.reject('Failed to connect to elk panel.');
+      })
+      .then(() => {
+        this.connection.removeListener('error', errorListener);
+      });
+  }
+
+  addListeners() {
+    if (this.connection) {
+      // Listen for incoming data 
+      this.connection.on('data', (data) => this.onDataReceived(data));
+
+      // error event handler
+      this.connection.on('error', (error) => this.onError(error));
+
+      // close event handler
+      this.connection.on('close', () => {
+        this.emit('end', 'The connection to the Elk M1 has been lost');
+      });
+    }
   }
 
   onConnect() {
     this.emit('connected');
   }
 
-  onDataReceived(data) {
+  onError(error: Error) {
+    this.emit('error', error);
+  }
+
+  onDataReceived(data: string) {
     // check for elk auth requests
     if (data == 'Username:') {
       return this.connection.write(this.options.userName + '\r\n');
@@ -98,7 +116,6 @@ class Elk extends EventEmitter {
       return this.connection.write(this.options.password + '\r\n');
     } else if (data.indexOf('Elk-M1XEP: Login successful.') !== -1) {
       this.isAuthorized = true;
-      this.emit('connected');
       return;
     }
 
@@ -107,23 +124,22 @@ class Elk extends EventEmitter {
       return;
     }
 
-    try
-    {
-    // Split on newline in case multiple messages are received at one time.
-    let messages: Array<string> = data.trim().split('\n');
+    try {
+      // Split on newline in case multiple messages are received at one  time.
+      let messages: Array<string> = data.trim().split('\n');
 
-    messages.forEach((message, index) => {
-      // Remove carriage return
-      message = message.replace('\r', '');
+      messages.forEach((message, index) => {
+        // Remove carriage return
+        message = message.replace('\r', '');
 
-      // Parse message using Elk factory method
-      let elkMessage = getElkMessage(message);
+        // Parse message using Elk factory method
+        let elkMessage = getElkMessage(message);
 
-      // Emit message
-      this.emit('*', elkMessage);
-      this.emit(elkMessage.type, elkMessage);
-    });
-    } catch (e){
+        // Emit message
+        this.emit('*', elkMessage);
+        this.emit(elkMessage.type, elkMessage);
+      });
+    } catch (e) {
       this.emit('error', e);
     }
   }
@@ -140,7 +156,7 @@ class Elk extends EventEmitter {
     this.connection.write(`${elk.message}\r\n`);
   }
 
-  
+
   /**
    * Disarm an Area by id.
    * 
@@ -152,7 +168,7 @@ class Elk extends EventEmitter {
     this.connection.write(`${elk.message}\r\n`);
   }
 
-  
+
   /**
    * Activates a task. The task is deactivated when it completes.
    * 
@@ -160,6 +176,17 @@ class Elk extends EventEmitter {
    */
   activateTask(taskId: number) {
     let elk = new ElkMessage(`tn${leftPad(taskId.toString(), 3, '0')}`, null);
+    this.connection.write(`${elk.message}\r\n`);
+  }
+
+  /**
+   * Send keypad function key press command. Used to simulate a function key being pressed on a keypad.
+   * 
+   * @param {number} keypadId
+   * @param {number} functionKey - Function key (1-6)
+   */
+  sendFunctionKeypress(keypadId: number, functionKey: number) {
+    let elk = new ElkMessage(`kf${leftPad(keypadId.toString(), 2, '0')}${functionKey}`, null);
     this.connection.write(`${elk.message}\r\n`);
   }
 
@@ -183,8 +210,8 @@ class Elk extends EventEmitter {
     let elk = new ElkMessage(`cf${leftPad(outputId.toString(), 3, '0')}`, null);
     this.connection.write(`${elk.message}\r\n`);
   }
-  
-  
+
+
   /**
    * Command Elk panel to speak a message over it's speaker.
    * 
@@ -196,10 +223,10 @@ class Elk extends EventEmitter {
     words.forEach(word => {
       let index = Words[word.toLowerCase()];
       let elk = new ElkMessage(`sw${leftPad(index, 3, '0')}`, null);
-      this.connection.write(`${elk.message}\r\n`);      
+      this.connection.write(`${elk.message}\r\n`);
     });
   }
-  
+
   /**
    * Toggles a control Output On/Off.
    * 
@@ -209,7 +236,7 @@ class Elk extends EventEmitter {
     let elk = new ElkMessage(`ct${leftPad(outputId.toString(), 3, '0')}`, null);
     this.connection.write(`${elk.message}\r\n`);
   }
-  
+
   /**
    * Bypass a Zone.
    * 
@@ -233,19 +260,20 @@ class Elk extends EventEmitter {
    */
   requestArmingStatus(timeout = 5000): Promise<ArmingStatusReport> {
     return new Promise((resolve, reject) => {
+      //Setup timeout
+      const timeoutId = setTimeout(function () {
+        reject('Timout occured before Arming Status (as) was received.');
+      }, timeout);
+
       //Listen for response
       this.once('AS', (response) => {
+        clearTimeout(timeoutId);
         resolve(response);
       });
 
       //Send the command
       let elk = new ElkMessage('as', null);
       this.connection.write(`${elk.message}\r\n`);
-
-      //Setup timeout
-      setTimeout(function () {
-        reject('Timout occured before Arming Status (as) was received.');
-      }, timeout);
     });
   }
 
@@ -259,22 +287,23 @@ class Elk extends EventEmitter {
    */
   requestAreas(timeout = 5000): Promise<KeypadAreasReport> {
     return new Promise((resolve, reject) => {
+      //Setup timeout
+      const timeoutId = setTimeout(function () {
+        reject('Timout occured before Area request (ka) was received.');
+      }, timeout);
+
       //Listen for response
       this.once('KA', (response) => {
+        clearTimeout(timeoutId);
         resolve(response);
       });
 
       //Send the command
       let elk = new ElkMessage('ka', null);
       this.connection.write(`${elk.message}\r\n`);
-
-      //Setup timeout
-      setTimeout(function () {
-        reject('Timout occured before Area request (ka) was received.');
-      }, timeout);
     });
   }
-    
+
   /**
    * Request the Control Output Status report from Elk panel.
    * 
@@ -283,19 +312,20 @@ class Elk extends EventEmitter {
    */
   requestOutputStatusReport(timeout = 5000): Promise<OutputStatusReport> {
     return new Promise((resolve, reject) => {
+      //Setup timeout
+      const timeoutId = setTimeout(function () {
+        reject('Timout occured before Control Output Status (cs) was received.');
+      }, timeout);
+
       //Listen for response
       this.once('CS', (response) => {
+        clearTimeout(timeoutId);
         resolve(response);
       });
 
       //Send the command
       let elk = new ElkMessage('cs', null);
       this.connection.write(`${elk.message}\r\n`);
-
-      //Setup timeout
-      setTimeout(function () {
-        reject('Timout occured before Control Output Status (cs) was received.');
-      }, timeout);
     });
   }
 
@@ -309,19 +339,20 @@ class Elk extends EventEmitter {
    */
   requestSystemStatus(timeout = 5000): Promise<ElkMessage> {
     return new Promise((resolve, reject) => {
+      //Setup timeout
+      const timeoutId = setTimeout(function () {
+        reject('Timout occured before system status request (ss) was received.');
+      }, timeout);
+
       //Listen for response
       this.once('SS', (response) => {
+        clearTimeout(timeoutId);
         resolve(response);
       });
 
       //Send the command
       let elk = new ElkMessage('ss', null);
       this.connection.write(`${elk.message}\r\n`);
-
-      //Setup timeout
-      setTimeout(function () {
-        reject('Timout occured before system status request (ss) was received.');
-      }, timeout);
     });
   }
 
@@ -337,23 +368,24 @@ class Elk extends EventEmitter {
    */
   requestTextDescription(id: number, type: TextDescriptionType, timeout = 5000): Promise<TextStringDescriptionReport> {
     return new Promise((resolve, reject) => {
+      //Setup timeout
+      const timeoutId = setTimeout(function () {
+        reject('Timout occured before Text Description (sd) was received.');
+      }, timeout);
+
       //Listen for response
       this.once('SD', (response) => {
+        clearTimeout(timeoutId);
         resolve(response);
       });
 
       //Send the command
       let elk = new ElkMessage(`sd${leftPad(type.toString(), 2, 0)}${leftPad(id.toString(), 3, 0)}`, null);
       this.connection.write(`${elk.message}\r\n`);
-
-      //Setup timeout
-      setTimeout(function () {
-        reject('Timout occured before Text Description (sd) was received.');
-      }, timeout);
     });
   }
 
-  
+
   /**
    * For internal use by requestTextDescriptionAll. Asynchronous call to retreived
    * a Text Description.
@@ -374,11 +406,11 @@ class Elk extends EventEmitter {
 
     //Setup timeout
     setTimeout(function () {
-      cb({ error: 'Timout occured before Text Description (sd) was received.'});
+      cb({ error: 'Timout occured before Text Description (sd) was received.' });
     }, timeout);
   }
 
-  
+
   /**
    * Method returns the configured Text Descriptions, by type. We start at id=1.
    * If the requested id is not configured, Elk will return the next configured item (to speed up requests)
@@ -397,12 +429,12 @@ class Elk extends EventEmitter {
 
     const recursiveCall = (id, resolve, reject) => {
       this.getDescription(id, type, (data) => {
-        if(data.error) {
+        if (data.error) {
           reject(data.error);
         }
 
         // If the returned id == 0, then no more configured items.
-        if(data.id > 0 && id < textDescriptionMaxRange[TextDescriptionType[type]]) {
+        if (data.id > 0 && id < textDescriptionMaxRange[TextDescriptionType[type]]) {
           //panel returned a text description
           items.push(data);
           // Since panel returns the 'next' configured item, we need set the id to 
@@ -422,7 +454,7 @@ class Elk extends EventEmitter {
       recursiveCall(1, resolve, reject);
     });
   }
-  
+
   /**
    * Requests a Zone Definition Report from the Elk panel.
    * 
@@ -447,7 +479,7 @@ class Elk extends EventEmitter {
     });
   }
 
-  
+
   /**
    * Requests a Zone Partition Report from the Elk panel.
    * 
@@ -472,7 +504,7 @@ class Elk extends EventEmitter {
     });
   }
 
-  
+
   /**
    * Requests a Zone Status Report from the Elk panel.
    * 
@@ -537,7 +569,7 @@ class Elk extends EventEmitter {
     if (element < 0 || element > 5)
       throw new Error(message.replace('value', 'element'));
 
-    switch(element) {
+    switch (element) {
       case 0:
         if (value < 0 || value > 4)
           throw new Error(message);
@@ -560,7 +592,7 @@ class Elk extends EventEmitter {
         break;
       default:
     }
-  
+
     let elk = new ElkMessage(`ts${leftPad(thermostatId.toString(), 2, '0')}${leftPad(value.toString(), 2, '0')}${element.toString()}`, null);
     this.connection.write(`${elk.message}\r\n`);
   }
@@ -568,10 +600,25 @@ class Elk extends EventEmitter {
   /**
    * Disconnects from the Elk M1XEP.
    */
-  disconnect() {
-    if (this.connection) {
-      this.connection.destroy();
-    }
+  disconnect(): Promise<void> {
+    let closeListener: () => void;
+    let errorListener: (error: Error) => void;
+
+    return new Promise((resolve, reject) => {
+      if (this.connection) {
+        closeListener = () => resolve();
+        errorListener = error => reject(error);
+
+        this.connection.on('end', closeListener)
+        this.connection.on('error', errorListener)
+        this.connection.destroy();
+      }
+      resolve();
+    })
+      .then(() => {
+        this.removeListener('end', closeListener)
+        this.removeListener('error', errorListener);
+      })
   }
 
 }
