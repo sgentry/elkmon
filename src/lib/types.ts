@@ -68,10 +68,10 @@ export const armUpState = new Map(
   [
     ['0', 'Not Ready To Arm'],
     ['1', 'Ready To Arm'],
-    ['2', 'Ready To Arm, but a zone is voilated and can be Force Armed'],
+    ['2', 'Ready To Arm, but a zone is violated and can be Force Armed'],
     ['3', 'Armed with Exit Timer working'],
     ['4', 'Armed Fully'],
-    ['5', 'Force Armed with a force arm zone voilated'],
+    ['5', 'Force Armed with a force arm zone violated'],
     ['6', 'Armed with a bypass']
   ]
 );
