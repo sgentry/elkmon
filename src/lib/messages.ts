@@ -386,7 +386,7 @@ export class TextStringDescriptionReport extends ElkMessage {
     super(null, response);
 
     this.descriptionType = TextDescriptionType[parseInt(this.body.substring(0, 2))];
-    this.id = parseInt(this.body.substring(3, 5));
+    this.id = parseInt(this.body.substring(2, 5));
     this.description = this.body.substring(5, this.body.length - 2).trim();
   }
 }
