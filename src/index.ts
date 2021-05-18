@@ -169,7 +169,7 @@ class Elk extends EventEmitter {
    * @param {number} seconds - Number of seconds output will be active
    */
   setOutputOn(outputId: number, seconds: number) {
-    let elk = new ElkMessage(`cn${leftPad(outputId.toString(), 3, '0')}${seconds.toString()}`, null);
+    let elk = new ElkMessage(`cn${leftPad(outputId.toString(), 3, '0')}${leftPad(seconds.toString(),5,'0')}`, null);
     this.connection.write(`${elk.message}\r\n`);
   }
 
