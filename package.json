@@ -1,6 +1,6 @@
 {
   "name": "elkmon",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Module to interact with the Elk M1 Gold, using M1XEP ethernet interface",
   "keywords": [
     "elk",
