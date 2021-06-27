@@ -78,7 +78,7 @@ export class ElkMessage {
   }
 
   calcChecksum() {
-    const buf = new Buffer(`${this.hexLength}${this.type}${this.body}`);
+    const buf = Buffer.from(`${this.hexLength}${this.type}${this.body}`);
 
     let sum = 0
     for (let i = 0; i < buf.length; i++) {
