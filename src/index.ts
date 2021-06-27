@@ -56,7 +56,7 @@ class Elk extends EventEmitter {
           },
           () => {
             this.onConnect();
-            resolve();
+            resolve(null);
           });
       }
       else {
@@ -66,7 +66,7 @@ class Elk extends EventEmitter {
         },
           () => {
             this.onConnect();
-            resolve();
+            resolve(null);
           });
       }
 
@@ -606,14 +606,14 @@ class Elk extends EventEmitter {
 
     return new Promise((resolve, reject) => {
       if (this.connection) {
-        closeListener = () => resolve();
+        closeListener = () => resolve(null);
         errorListener = error => reject(error);
 
         this.connection.on('end', closeListener)
         this.connection.on('error', errorListener)
         this.connection.destroy();
       }
-      resolve();
+      resolve(null);
     })
       .then(() => {
         this.removeListener('end', closeListener)

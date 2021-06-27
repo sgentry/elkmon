@@ -22,9 +22,11 @@
     "url": "https://github.com/sgentry/elkmon.git"
   },
   "scripts": {
-    "prepublish": "tsc",
+    "build": "npm run clean && tsc",
+    "clean": "rimraf dist",
+    "prepublish": "npm run clean && tsc",
     "pretest": "tsc",
-    "test": "mocha dist/test --recursive"
+    "test": "mocha"
   },
   "license": "MIT",
   "dependencies": {
@@ -32,7 +34,11 @@
     "tls": "0.0.1"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
-    "mocha": "^2.5.3"
+    "@types/node": "^15.12.5",
+    "chai": "^4.3.4",
+    "mocha": "^9.0.1",
+    "rimraf": "^3.0.2",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.3.4"
   }
 }
