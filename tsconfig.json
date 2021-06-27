@@ -1,11 +1,12 @@
 {
+  "include": ["src/**/*"],
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
     "sourceMap": false,
     "declaration": true,
     "removeComments": false,
-    "outDir": "dist"
+    "outDir": "dist",
   },
     "exclude": [
         "node_modules",

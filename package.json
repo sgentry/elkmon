@@ -1,6 +1,6 @@
 {
   "name": "elkmon",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Module to interact with the Elk M1 Gold, using M1XEP ethernet interface",
   "keywords": [
     "elk",
@@ -22,9 +22,9 @@
     "url": "https://github.com/sgentry/elkmon.git"
   },
   "scripts": {
-    "prepublish": "tsc",
+    "prepublish": "rimraf dist && tsc",
     "pretest": "tsc",
-    "test": "mocha dist/test --recursive"
+    "test": "mocha"
   },
   "license": "MIT",
   "dependencies": {
@@ -32,7 +32,11 @@
     "tls": "0.0.1"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
-    "mocha": "^2.5.3"
+    "@types/node": "^15.12.5",
+    "chai": "^4.3.4",
+    "mocha": "^9.0.1",
+    "rimraf": "^3.0.2",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.3.4"
   }
 }
