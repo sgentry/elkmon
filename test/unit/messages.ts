@@ -1,4 +1,3 @@
-/// <reference path="../../typings/globals/mocha/index.d.ts" />
 import {
   ArmingStatusReport,
   KeypadKeyChangeUpdate,
